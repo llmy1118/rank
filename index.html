@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 游戏排行榜</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: #e74c3c;
+            font-size: 1.2em;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 50px;
+            color: #999;
+            font-size: 1.2em;
+        }
+
+        .leaderboard {
+            padding: 30px;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .leaderboard-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+        }
+
+        .leaderboard-table th:first-child {
+            border-radius: 10px 0 0 0;
+        }
+
+        .leaderboard-table th:last-child {
+            border-radius: 0 10px 0 0;
+        }
+
+        .leaderboard-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            color: #333;
+        }
+
+        .leaderboard-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .leaderboard-table tr:hover {
+            background: #e9ecef;
+            transition: background 0.3s;
+        }
+
+        .rank {
+            font-weight: bold;
+            text-align: center;
+            width: 80px;
+        }
+
+        .rank-1 {
+            color: #f1c40f;
+            font-size: 1.3em;
+        }
+
+        .rank-2 {
+            color: #95a5a6;
+            font-size: 1.2em;
+        }
+
+        .rank-3 {
+            color: #cd7f32;
+            font-size: 1.1em;
+        }
+
+        .player-name {
+            font-weight: 500;
+        }
+
+        .score {
+            font-weight: bold;
+            color: #667eea;
+            text-align: right;
+            width: 120px;
+        }
+
+        .date {
+            color: #999;
+            font-size: 0.9em;
+            text-align: right;
+            width: 180px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 0.9em;
+            background: #f8f9fa;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .leaderboard-table {
+                font-size: 0.9em;
+            }
+
+            .leaderboard-table th,
+            .leaderboard-table td {
+                padding: 10px;
+            }
+
+            .date {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 游戏排行榜</h1>
+            <p>展示所有玩家的最高分记录</p>
+        </div>
+
+        <div id="content">
+            <div class="loading">正在加载排行榜...</div>
+        </div>
+
+        <div class="footer">
+            <p>Powered by GitHub Pages</p>
+        </div>
+    </div>
+
+    <script>
+        // TODO: 修改为你的 GitHub 仓库信息
+        const GITHUB_OWNER = 'llmy118';
+        const GITHUB_REPO = 'rank';
+
+        const API_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/issues?labels=score&state=all&per_page=100`;
+
+        // 从 URL 参数获取仓库信息（可选）
+        const urlParams = new URLSearchParams(window.location.search);
+        const owner = urlParams.get('owner');
+        const repo = urlParams.get('repo');
+
+        if (owner && repo) {
+            const apiUrl = `https://api.github.com/repos/${owner}/${repo}/issues?labels=score&state=all&per_page=100`;
+            loadLeaderboard(apiUrl);
+        } else {
+            loadLeaderboard(API_URL);
+        }
+
+        function loadLeaderboard(url) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    displayLeaderboard(data);
+                })
+                .catch(error => {
+                    console.error('获取排行榜失败:', error);
+                    showError(error.message);
+                });
+        }
+
+        function displayLeaderboard(issues) {
+            const content = document.getElementById('content');
+
+            if (!issues || issues.length === 0) {
+                content.innerHTML = `
+                    <div class="empty">
+                        <p>📭 暂无排行榜数据</p>
+                        <p>成为第一个提交分数的玩家吧！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 解析 Issues 数据
+            const entries = issues.map(issue => {
+                const body = issue.body || '';
+                const playerNameMatch = body.match(/玩家名:\s*(.+)/);
+                const scoreMatch = body.match(/分数:\s*(.+)/);
+                const dateMatch = body.match(/时间:\s*(.+)/);
+
+                return {
+                    playerName: playerNameMatch ? playerNameMatch[1].trim() : '未知玩家',
+                    score: scoreMatch ? parseInt(scoreMatch[1].trim()) : 0,
+                    date: dateMatch ? dateMatch[1].trim() : issue.created_at
+                };
+            });
+
+            // 按分数降序排序
+            entries.sort((a, b) => b.score - a.score);
+
+            // 生成 HTML
+            let html = `
+                <div class="leaderboard">
+                    <button class="refresh-btn" onclick="location.reload()">🔄 刷新排行榜</button>
+                    <table class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>玩家名</th>
+                                <th>得分</th>
+                                <th>时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            entries.forEach((entry, index) => {
+                const rank = index + 1;
+                const rankClass = rank <= 3 ? `rank-${rank}` : '';
+                html += `
+                    <tr>
+                        <td class="rank ${rankClass}">${rank}</td>
+                        <td class="player-name">${escapeHtml(entry.playerName)}</td>
+                        <td class="score">${entry.score}</td>
+                        <td class="date">${entry.date}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            content.innerHTML = html;
+        }
+
+        function showError(message) {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div class="error">
+                    <p>❌ 无法加载排行榜</p>
+                    <p>错误信息: ${escapeHtml(message)}</p>
+                    <p style="margin-top: 20px;">
+                        <button class="refresh-btn" onclick="location.reload()">🔄 重试</button>
+                    </p>
+                    <p style="margin-top: 20px; font-size: 0.9em;">
+                        可能的原因:<br>
+                        1. GitHub API 请求限制<br>
+                        2. 网络连接问题<br>
+                        3. 仓库配置错误
+                    </p>
+                </div>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
