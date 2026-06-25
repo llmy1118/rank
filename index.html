@@ -212,32 +212,13 @@
     </div>
 
     <script>
-        // TODO: 修改为你的 GitHub 仓库信息
-        const GITHUB_OWNER = 'llmy118';
-        const GITHUB_REPO = 'rank';
-        const GITHUB_TOKEN = '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';
+        // 直接读取静态 JSON 文件
+        const API_URL = 'data.json';
 
-        const API_URL = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/issues?labels=score&state=all&per_page=100`;
-
-        // 从 URL 参数获取仓库信息（可选）
-        const urlParams = new URLSearchParams(window.location.search);
-        const owner = urlParams.get('owner');
-        const repo = urlParams.get('repo');
-
-        if (owner && repo) {
-            const apiUrl = `https://api.github.com/repos/${owner}/${repo}/issues?labels=score&state=all&per_page=100`;
-            loadLeaderboard(apiUrl);
-        } else {
-            loadLeaderboard(API_URL);
-        }
+        loadLeaderboard(API_URL);
 
         function loadLeaderboard(url) {
-            fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${GITHUB_TOKEN}`,
-                    'User-Agent': 'Game-Leaderboard'
-                }
-            })
+            fetch(url)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -253,10 +234,10 @@
                 });
         }
 
-        function displayLeaderboard(issues) {
+        function displayLeaderboard(data) {
             const content = document.getElementById('content');
 
-            if (!issues || issues.length === 0) {
+            if (!data || data.length === 0) {
                 content.innerHTML = `
                     <div class="empty">
                         <p>📭 暂无排行榜数据</p>
@@ -266,22 +247,8 @@
                 return;
             }
 
-            // 解析 Issues 数据
-            const entries = issues.map(issue => {
-                const body = issue.body || '';
-                const playerNameMatch = body.match(/玩家名:\s*(.+)/);
-                const scoreMatch = body.match(/分数:\s*(.+)/);
-                const dateMatch = body.match(/时间:\s*(.+)/);
-
-                return {
-                    playerName: playerNameMatch ? playerNameMatch[1].trim() : '未知玩家',
-                    score: scoreMatch ? parseInt(scoreMatch[1].trim()) : 0,
-                    date: dateMatch ? dateMatch[1].trim() : issue.created_at
-                };
-            });
-
             // 按分数降序排序
-            entries.sort((a, b) => b.score - a.score);
+            data.sort((a, b) => b.score - a.score);
 
             // 生成 HTML
             let html = `
@@ -299,7 +266,7 @@
                         <tbody>
             `;
 
-            entries.forEach((entry, index) => {
+            data.forEach((entry, index) => {
                 const rank = index + 1;
                 const rankClass = rank <= 3 ? `rank-${rank}` : '';
                 html += `
