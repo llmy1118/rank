@@ -1,1 +1,30 @@
-[]
+[
+    {
+        "date": "2026-06-25 16:01:05",
+        "playerName": "llmy",
+        "props": "",
+        "score": 8,
+        "scoreDetails": ""
+    },
+    {
+        "date": "2026-06-25 15:04:22",
+        "playerName": "llmy",
+        "props": "",
+        "score": 4,
+        "scoreDetails": ""
+    },
+    {
+        "date": "2026-07-02 00:56:08",
+        "playerName": "llmy",
+        "props": "手电筒, 帐篷",
+        "score": -1,
+        "scoreDetails": "牌库剩余卡牌: +1分\n信件指示物: +2分(每信2分)\n观光点1（单张卡牌）: +4分\n观光点2: +4分\n\n观光点奖励: +8分\n道具扣分: -12分\n"
+    },
+    {
+        "date": "2026-07-02 00:56:06",
+        "playerName": "llmy",
+        "props": "手电筒, 帐篷",
+        "score": -1,
+        "scoreDetails": "牌库剩余卡牌: +1分\n信件指示物: +2分(每信2分)\n观光点1（单张卡牌）: +4分\n观光点2: +4分\n\n观光点奖励: +8分\n道具扣分: -12分\n"
+    }
+]
